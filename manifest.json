@@ -1,0 +1,17 @@
+{
+  "name": "Calculadora Militar",
+  "short_name": "CalcMilitar",
+  "description": "Calculadora de Aposentadoria Militar - LC 692/2021",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#1e293b",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/2371/2371914.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

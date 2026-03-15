@@ -1,0 +1,1287 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
+    <title>Calculadora de Aposentadoria Militar</title>
+    
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#ffffff">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2371/2371914.png">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://calcmilitar-pm.netlify.app">
+    <meta property="og:title" content="Calculadora Militar PMRN">
+    <meta property="og:description" content="Sistema de cálculo de tempo de serviço da Polícia Militar">
+    <meta property="og:image" content="https://calcmilitar-pm.netlify.app/og-image.png">
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="https://calcmilitar-pm.netlify.app">
+    <meta name="twitter:title" content="Calculadora Militar PMRN">
+    <meta name="twitter:description" content="Sistema de cálculo de tempo de serviço da Polícia Militar">
+    <meta name="twitter:image" content="https://calcmilitar-pm.netlify.app/og-image.png">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    screens: {
+                        'lg': '980px',
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --blue-main: #008dc9;
+            --blue-light: #33a4d4;
+            --blue-intense: #0071a1;
+            --blue-gradient: linear-gradient(135deg, #0071a1, #008dc9);
+        }
+        html, body {
+            height: 100%;
+        }
+        body {
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            font-family: 'Inter', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            min-height: 100vh;
+            min-height: 100dvh;
+            -webkit-overflow-scrolling: touch;
+            touch-action: manipulation;
+            scroll-behavior: smooth;
+        }
+        main {
+            flex: 1;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        .bg-blue-gradient {
+            background: var(--blue-gradient);
+        }
+        .text-blue-main { color: var(--blue-main); }
+        .text-blue-intense { color: var(--blue-intense); }
+        .border-blue-intense { border-color: var(--blue-intense); }
+        
+        .app-card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+        }
+        .input-field {
+            width: 100%;
+            background-color: white;
+            border: 2px solid #000;
+            border-radius: 0;
+            padding: 0.75rem 1rem;
+            outline: none;
+            transition: all 0.2s;
+            font-size: 16px; /* Evita zoom automático no iOS ao focar */
+        }
+        .input-field:focus {
+            box-shadow: 0 0 0 2px var(--blue-intense);
+            border-color: #000;
+        }
+        .input-field-sm {
+            width: 100%;
+            background-color: white;
+            border: 2px solid #000;
+            border-radius: 0;
+            padding: 0.5rem 0.75rem;
+            outline: none;
+            transition: all 0.2s;
+            font-size: 16px; /* Evita zoom automático no iOS ao focar */
+        }
+        .input-field-sm:focus {
+            box-shadow: 0 0 0 2px var(--blue-intense);
+            border-color: #000;
+        }
+        .section-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            padding: 0.75rem 0;
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: #334155;
+            transition: color 0.2s;
+            border-bottom: 1px solid #f1f5f9;
+            margin-bottom: 1rem;
+        }
+        .section-toggle:hover {
+            color: var(--blue-intense);
+        }
+        .section-content {
+            display: none;
+            margin-bottom: 1.5rem;
+            animation: fadeIn 0.3s ease-out;
+        }
+        .section-content.active {
+            display: block;
+        }
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: invert(0.5);
+        }
+        .fade-in {
+            animation: fadeIn 0.3s ease-out forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Material Design 3 Date Picker Styles */
+        .md-scrim {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(0px);
+            overflow-y: auto;
+            padding: 20px;
+            -webkit-overflow-scrolling: touch;
+            touch-action: manipulation;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        .md-scrim.active { 
+            opacity: 1;
+            visibility: visible;
+            background: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(4px);
+        }
+
+        /* Ajustes para Desktop: evita expansão vertical excessiva e garante visibilidade */
+        @media (min-width: 640px) {
+            .md-scrim {
+                align-items: flex-start;
+                padding-top: 5vh;
+                padding-bottom: 5vh;
+            }
+            .md-modal {
+                max-height: 90vh;
+                display: flex;
+                flex-direction: column;
+                margin-top: auto;
+                margin-bottom: auto;
+            }
+            .md-calendar {
+                overflow-y: auto;
+                flex: 1;
+            }
+        }
+        
+        .md-modal {
+            background: #FFFFFF;
+            width: 340px;
+            max-width: 100%;
+            border-radius: 32px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            transform: scale(0.95) translateY(10px);
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            opacity: 0;
+        }
+        .md-scrim.active .md-modal {
+            transform: scale(1) translateY(0);
+            opacity: 1;
+        }
+
+        .md-header {
+            padding: 20px 20px 16px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--blue-intense);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .md-select-container {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            width: 100%;
+        }
+        .md-select {
+            flex: 1;
+            font-size: 14px;
+            font-weight: 700;
+            color: #1e293b;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            outline: none;
+            cursor: pointer;
+            padding: 6px 32px 6px 12px;
+            border-radius: 12px;
+            transition: all 0.2s;
+            appearance: none;
+            -webkit-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 8px center;
+            background-size: 16px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+        .md-select:hover {
+            border-color: var(--blue-intense);
+            background-color: #f1f5f9;
+        }
+        .md-select:focus {
+            border-color: var(--blue-intense);
+            box-shadow: 0 0 0 3px rgba(0, 141, 201, 0.1);
+        }
+        .md-nav-btn {
+            padding: 10px;
+            border-radius: 12px;
+            color: #64748b;
+            transition: all 0.2s;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            margin-left: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .md-nav-btn:hover { 
+            background: #f1f5f9; 
+            color: var(--blue-intense);
+            border-color: var(--blue-intense);
+        }
+        .md-nav-btn:active {
+            transform: scale(0.95);
+        }
+
+        .md-calendar {
+            padding: 16px 16px 12px 16px;
+        }
+        .md-weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            text-align: center;
+            margin-bottom: 8px;
+        }
+        .md-weekday {
+            font-size: 11px;
+            font-weight: 800;
+            color: #94a3b8;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .md-days-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+        }
+        .md-day {
+            height: 42px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            border-radius: 14px;
+            position: relative;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            color: #334155;
+        }
+        .md-day:hover:not(.empty) { 
+            background: #f1f5f9; 
+            color: var(--blue-intense);
+        }
+        .md-day.selected {
+            background: var(--blue-intense) !important;
+            color: #FFFFFF !important;
+            font-weight: 700;
+            box-shadow: 0 4px 12px rgba(0, 141, 201, 0.3);
+            transform: scale(1.05);
+        }
+        .md-day.today {
+            color: var(--blue-intense);
+            font-weight: 800;
+            background: rgba(0, 141, 201, 0.08);
+        }
+        .md-day.today::after {
+            content: '';
+            position: absolute;
+            bottom: 6px;
+            width: 4px;
+            height: 4px;
+            background: var(--blue-intense);
+            border-radius: 50%;
+        }
+        .md-day.outside {
+            color: #cbd5e1;
+            font-weight: 400;
+        }
+        .md-day.empty { cursor: default; }
+
+        .md-footer {
+            padding: 12px 24px 24px 24px;
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            background: #ffffff;
+        }
+        .md-btn {
+            flex: 1;
+            padding: 12px 20px;
+            font-size: 14px;
+            font-weight: 700;
+            color: #64748b;
+            border-radius: 14px;
+            transition: all 0.2s;
+            letter-spacing: 0.3px;
+            border: 1px solid #e2e8f0;
+            text-align: center;
+        }
+        .md-btn:hover { 
+            background: #f8fafc;
+            color: #1e293b;
+            border-color: #cbd5e1;
+        }
+        .md-btn-confirm {
+            background: var(--blue-intense);
+            color: white;
+            border: none;
+            box-shadow: 0 4px 6px -1px rgba(0, 141, 201, 0.2);
+        }
+        .md-btn-confirm:hover {
+            background: #0071a1;
+            color: white;
+            transform: translateY(-1px);
+            box-shadow: 0 10px 15px -3px rgba(0, 141, 201, 0.3);
+        }
+        .md-btn-confirm:active {
+            transform: translateY(0);
+        }
+
+        .date-input-container {
+            position: relative;
+            cursor: pointer;
+        }
+        .date-input-container input {
+            cursor: pointer;
+            pointer-events: none;
+        }
+        .date-input-icon {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--blue-main);
+        }
+        @keyframes shine {
+            from { transform: translateX(-100%); }
+            to { transform: translateX(100%); }
+        }
+        .animate-shine {
+            animation: shine 2s infinite linear;
+        }
+
+        /* Responsividade Desktop */
+        .container-custom {
+            width: 100%;
+            margin-left: auto;
+            margin-right: auto;
+            padding-left: 1rem;
+            padding-right: 1rem;
+        }
+
+        @media (min-width: 640px) {
+            .container-custom { max-width: 640px; }
+        }
+        @media (min-width: 768px) {
+            .container-custom { max-width: 768px; }
+        }
+        @media (min-width: 1024px) {
+            body {
+                background-color: #f3f4f6;
+            }
+
+            .container-custom {
+                max-width: 800px;
+                width: 100%;
+                margin: 0 auto;
+            }
+
+            #form-section, #result-section {
+                padding: 3.5rem;
+                margin-top: 2rem;
+                margin-bottom: 2rem;
+            }
+
+            /* Organização vertical conforme solicitado para manter semelhança com mobile mas adaptado ao desktop */
+            .grid-cols-desktop-2 {
+                display: flex;
+                flex-direction: column;
+                gap: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body class="text-slate-900 bg-slate-50 min-h-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="bg-blue-gradient text-white py-4 px-4 shadow-lg sticky top-0 z-50">
+        <div class="container-custom menu-custom">
+            <div class="flex justify-center lg:justify-start items-center gap-3">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 sm:h-7 sm:w-7 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                </svg>
+                <h1 class="text-xl sm:text-2xl font-black tracking-tighter uppercase whitespace-nowrap drop-shadow-md">CALCULADORA MILITAR - PM</h1>
+            </div>
+            <div class="hidden lg:flex gap-4">
+                <a href="#" class="text-white hover:underline">Início</a>
+                <a href="#" class="text-white hover:underline">Sobre</a>
+                <a href="#" class="text-white hover:underline">Contato</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="container-custom flex-1 w-full pb-8 flex flex-col">
+        
+        <!-- Welcome Section -->
+        <section id="welcome-section" class="section-custom mt-6 mb-4 text-center">
+            <div class="w-full">
+                <h2 class="text-xl sm:text-2xl font-extrabold text-slate-800 mb-1 whitespace-nowrap">Calculadora de Aposentadoria</h2>
+                <p class="text-slate-700 text-[9px] sm:text-[10px] font-medium whitespace-nowrap uppercase tracking-tighter">Projeção baseada na Lei Complementar Estadual 692/2021</p>
+            </div>
+        </section>
+
+        <!-- Form Section -->
+        <section id="form-section" class="section-custom app-card rounded-3xl p-6 shadow-xl border border-slate-100">
+            <form id="calc-form" class="space-y-6">
+                
+                <div class="grid-cols-desktop-2 space-y-6 lg:space-y-0">
+                    <!-- Data de Ingresso -->
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">Data de Ingresso na Corporação</label>
+                        <div class="date-input-container" onclick="openDatePicker('data-ingresso')">
+                            <input type="text" id="data-ingresso" readonly placeholder="DD/MM/AAAA" class="input-field pr-10">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 date-input-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                        </div>
+                    </div>
+
+                    <!-- Licença Especial Section -->
+                    <div class="border-t border-slate-50 pt-2 lg:border-t-0 lg:pt-0">
+                        <button type="button" class="section-toggle" onclick="toggleSection('licenca-section', this)">
+                            <span>Licença Especial</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 transform transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
+                        <div id="licenca-section" class="section-content">
+                            <div class="flex items-center justify-center gap-6 py-4 bg-slate-50 rounded-2xl border border-slate-100">
+                                <button type="button" onclick="updateLicenca(-1)" id="btn-licenca-minus" disabled class="w-12 h-12 flex items-center justify-center rounded-full bg-white border-2 border-slate-200 text-slate-600 shadow-sm active:scale-95 transition-all disabled:opacity-30 disabled:cursor-not-allowed">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
+                                    </svg>
+                                </button>
+                                <div class="text-center min-w-[120px]">
+                                    <span id="licenca-count-display" class="text-xl font-black text-slate-800">0 Licenças</span>
+                                    <input type="hidden" id="licenca-count" value="0">
+                                </div>
+                                <button type="button" onclick="updateLicenca(1)" id="btn-licenca-plus" class="w-12 h-12 flex items-center justify-center rounded-full bg-white border-2 border-slate-200 text-slate-600 shadow-sm active:scale-95 transition-all disabled:opacity-30 disabled:cursor-not-allowed">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                    </svg>
+                                </button>
+                            </div>
+                            
+                            <!-- Card Informativo Dinâmico -->
+                            <div id="licenca-info-card" class="mt-4 p-4 bg-blue-50 rounded-2xl border border-blue-100 fade-in">
+                                <div class="flex items-start gap-3">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-500 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    <div>
+                                        <h5 class="text-[10px] font-black text-blue-700 uppercase tracking-wider mb-1">Impacto no cálculo</h5>
+                                        <p id="licenca-impacto-texto" class="text-xs text-slate-700 font-medium leading-tight">
+                                            Nenhuma licença especial considerada no cálculo.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tempo de Averbação Section -->
+                <div class="border-t border-slate-50 pt-2">
+                    <button type="button" class="section-toggle" onclick="toggleSection('averbacao-section', this)">
+                        <span>Tempo de Averbação</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 transform transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+                    <div id="averbacao-section" class="section-content">
+                        <!-- Seletor de Modo -->
+                        <div class="flex p-1 bg-slate-100 rounded-xl mb-6">
+                            <button type="button" onclick="setAverbacaoMode('datas')" id="btn-mode-datas" class="flex-1 py-2 text-xs font-bold rounded-lg transition-all bg-white shadow-sm text-blue-600">Por Datas</button>
+                            <button type="button" onclick="setAverbacaoMode('periodo')" id="btn-mode-periodo" class="flex-1 py-2 text-xs font-bold rounded-lg transition-all text-slate-500 hover:text-slate-700">Por Período</button>
+                        </div>
+
+                        <!-- Modo: Por Datas -->
+                        <div id="averb-mode-datas-content" class="space-y-4 fade-in">
+                            <div class="grid-cols-desktop-2 space-y-4 lg:space-y-0 mb-4">
+                                <div>
+                                    <span class="text-[10px] uppercase font-bold text-slate-500 block mb-1">Data de Admissão</span>
+                                    <div class="date-input-container" onclick="openDatePicker('averb-data-inicio')">
+                                        <input type="text" id="averb-data-inicio" readonly placeholder="DD/MM/AAAA" class="input-field-sm pr-10">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 date-input-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div>
+                                    <span class="text-[10px] uppercase font-bold text-slate-500 block mb-1">Data de Exoneração</span>
+                                    <div class="date-input-container" onclick="openDatePicker('averb-data-fim')">
+                                        <input type="text" id="averb-data-fim" readonly placeholder="DD/MM/AAAA" class="input-field-sm pr-10">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 date-input-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Modo: Por Período -->
+                        <div id="averb-mode-periodo-content" class="hidden fade-in">
+                            <div class="grid grid-cols-3 gap-3">
+                                <div>
+                                    <span class="text-[10px] uppercase font-bold text-slate-500 block mb-1">Anos</span>
+                                    <input type="number" id="averb-anos" value="0" min="0" max="99" oninput="limitDigits(this, 2)"
+                                        class="input-field-sm">
+                                </div>
+                                <div>
+                                    <span class="text-[10px] uppercase font-bold text-slate-500 block mb-1">Meses</span>
+                                    <input type="number" id="averb-meses" value="0" min="0" max="11" oninput="limitDigits(this, 2)"
+                                        class="input-field-sm">
+                                </div>
+                                <div>
+                                    <span class="text-[10px] uppercase font-bold text-slate-500 block mb-1">Dias</span>
+                                    <input type="number" id="averb-dias" value="0" min="0" max="30" oninput="limitDigits(this, 2)"
+                                        class="input-field-sm">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" 
+                    class="w-full bg-blue-gradient hover:opacity-90 text-white font-bold py-4 rounded-2xl shadow-lg shadow-[var(--blue-intense)]/20 transition-all active:scale-95 flex items-center justify-center gap-2">
+                    <span>Calcular</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+                    </svg>
+                </button>
+                
+                <!-- Crédito do Desenvolvedor -->
+                <p class="text-xs text-slate-500 text-center mt-4 font-medium">
+                    © Desenvolvido por Idailson
+                </p>
+            </form>
+        </section>
+
+        <!-- Result Section (Hidden by default) -->
+        <section id="result-section" class="section-custom hidden fade-in mt-8 space-y-0">
+            <div class="app-card rounded-3xl shadow-xl border border-slate-100 overflow-hidden">
+                <!-- Header do Relatório -->
+                <div class="p-8 text-center bg-white border-b border-slate-100">
+                    <h3 class="text-sky-700 text-[11px] font-bold uppercase tracking-[0.2em] mb-3 whitespace-nowrap">Data Prevista de Aposentadoria</h3>
+                    <div id="data-aposentadoria-final" class="text-5xl sm:text-7xl font-bold text-slate-800 tracking-tighter mb-2">--/--/----</div>
+                    <div class="flex items-center justify-center gap-2">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                        <span id="gerado-em" class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Gerado em: --/--/----</span>
+                    </div>
+                </div>
+
+                <!-- Conteúdo do Relatório -->
+                <div class="p-6 sm:p-8 space-y-10">
+                    
+                    <!-- Bloco: Progresso -->
+                    <div class="relative">
+                        <div class="flex items-center justify-between mb-6">
+                            <div class="flex flex-col">
+                                <h4 class="text-[12px] font-bold text-sky-700 uppercase tracking-[0.1em]">Análise de Progresso</h4>
+                                <span class="text-[10px] text-sky-600 font-bold uppercase">Status da Carreira</span>
+                            </div>
+                            <div class="bg-blue-100 text-blue-700 px-4 py-1.5 rounded-2xl text-sm font-bold shadow-sm" id="res-porcentagem">0%</div>
+                        </div>
+                        
+                        <div class="w-full mb-8">
+                            <div class="w-full bg-slate-200 rounded-full h-6 p-1.5 shadow-inner relative overflow-hidden">
+                                <div id="progress-bar" class="bg-gradient-to-r from-emerald-600 via-emerald-500 to-emerald-400 h-full rounded-full transition-all duration-1000 ease-out shadow-[0_0_15px_rgba(16,185,129,0.4)] relative overflow-hidden" style="width: 0%">
+                                    <!-- Shine Effect -->
+                                    <div class="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shine"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-6 text-center">
+                            <div class="group">
+                                <div class="text-[9px] font-black text-[var(--blue-intense)] uppercase tracking-widest mb-2 group-hover:text-[var(--blue-intense)] transition-colors flex items-center justify-center gap-1">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                    Tempo Cumprido
+                                </div>
+                                <div class="flex flex-col items-center">
+                                    <div id="legend-cumprido-val" class="text-lg font-black text-slate-800">0 dias</div>
+                                    <div id="perc-cumprido-val" class="text-[10px] font-black text-emerald-600 mt-0.5">0% realizado</div>
+                                </div>
+                            </div>
+                            <div class="group">
+                                <div class="text-[9px] font-black text-[var(--blue-intense)] uppercase tracking-widest mb-2 group-hover:text-[var(--blue-intense)] transition-colors flex items-center justify-center gap-1">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+                                    Tempo Restante
+                                </div>
+                                <div class="flex flex-col items-center">
+                                    <div id="legend-restante-val" class="text-lg font-black text-slate-800">0 dias</div>
+                                    <div id="perc-restante-val" class="text-[10px] font-black text-slate-500 mt-0.5">0% restante</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Divisor -->
+                    <div class="h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent"></div>
+
+                    <!-- Grid de Informações -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-10">
+                        <!-- Seção: Informações do Cálculo -->
+                        <div class="flex flex-col">
+                            <h4 class="text-[10px] font-black text-[var(--blue-intense)] uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
+                                <span class="w-1 h-4 bg-[var(--blue-main)] rounded-full"></span>
+                                Informações do Cálculo
+                            </h4>
+                            <div class="space-y-5 flex-grow">
+                                <div class="flex justify-between items-center group">
+                                    <span class="text-[10px] text-slate-600 font-bold uppercase tracking-tight">Data de Ingresso</span>
+                                    <span id="res-data-ingresso" class="text-xs font-black text-slate-900">--/--/----</span>
+                                </div>
+                                <div class="flex justify-between items-center group">
+                                    <span class="text-[10px] text-slate-600 font-bold uppercase tracking-tight">TMO Exigido</span>
+                                    <span id="res-tmo" class="text-xs font-black text-slate-900">--</span>
+                                </div>
+                                <div class="flex justify-between items-center group">
+                                    <span class="text-[10px] text-slate-600 font-bold uppercase tracking-tight">Tempo Cumprido</span>
+                                    <span id="res-cumprido" class="text-xs font-black text-slate-900">--</span>
+                                </div>
+                                <div class="flex justify-between items-center group">
+                                    <span class="text-[10px] text-slate-600 font-bold uppercase tracking-tight">Averbação Total</span>
+                                    <span id="res-averbado" class="text-xs font-black text-slate-900">--</span>
+                                </div>
+                                <div class="flex justify-between items-center group">
+                                    <span class="text-[10px] text-slate-600 font-bold uppercase tracking-tight">Licença Especial</span>
+                                    <span id="res-licenca" class="text-xs font-black text-emerald-600">--</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Seção: Resultados Detalhados -->
+                        <div class="flex flex-col">
+                            <h4 class="text-[10px] font-black text-[var(--blue-intense)] uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
+                                <span class="w-1 h-4 bg-[var(--blue-intense)] rounded-full"></span>
+                                Resultados Detalhados
+                            </h4>
+                            <div class="space-y-5 flex-grow">
+                                <div class="flex justify-between items-center group">
+                                    <span class="text-[10px] text-slate-600 font-bold uppercase tracking-tight">Faltava na Ref. 2021</span>
+                                    <span id="res-faltava-ref" class="text-xs font-black text-slate-900">--</span>
+                                </div>
+                                <div class="flex justify-between items-center group">
+                                    <span class="text-[10px] text-slate-600 font-bold uppercase tracking-tight">Pedágio (17%)</span>
+                                    <span id="res-pedagio" class="text-xs font-black text-amber-600">--</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Seção: Tempo Restante -->
+                        <div class="sm:col-span-2 pt-6 border-t border-slate-100 flex flex-col items-center gap-2 sm:gap-4">
+                            <span class="text-[11px] sm:text-[13px] text-[var(--blue-intense)] font-black uppercase tracking-[0.15em] sm:tracking-[0.25em] whitespace-nowrap">Tempo Restante</span>
+                            <span id="res-restante" class="text-lg sm:text-5xl font-black text-[var(--blue-intense)] whitespace-nowrap">--</span>
+                        </div>
+                    </div>
+
+                    <!-- Divisor -->
+                    <div class="h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent"></div>
+
+                    <!-- Seção: Resumo em Dias -->
+                    <div class="flex flex-col">
+                        <h4 class="text-[10px] font-black text-[var(--blue-intense)] uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
+                            <span class="w-1 h-4 bg-[var(--blue-intense)] rounded-full"></span>
+                            Resumo de Tempo (Dias)
+                        </h4>
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-x-12 gap-y-5 flex-grow">
+                            <div class="flex justify-between items-center group">
+                                <span class="text-[10px] text-slate-600 font-bold uppercase tracking-tight">Dias Trabalhados</span>
+                                <span id="res-dias-trabalhados-val" class="text-xs font-black text-slate-900">--</span>
+                            </div>
+                            <div class="flex justify-between items-center group">
+                                <span class="text-[10px] text-slate-600 font-bold uppercase tracking-tight">Dias Faltantes</span>
+                                <span id="res-dias-faltantes-val" class="text-xs font-black text-slate-900">--</span>
+                            </div>
+                            <div class="flex justify-between items-center group">
+                                <span class="text-[10px] text-slate-600 font-bold uppercase tracking-tight">Dias de Pedágio</span>
+                                <span id="res-dias-pedagio-val" class="text-xs font-black text-amber-600">--</span>
+                            </div>
+                            <div class="lg:mt-0 pt-4 lg:pt-0 border-t lg:border-t-0 border-slate-100 flex justify-between items-center">
+                                <span class="text-[10px] text-[var(--blue-intense)] font-black uppercase tracking-widest">Total a Cumprir</span>
+                                <span id="res-total-cumprir-val" class="text-base font-black text-[var(--blue-main)]">--</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="pt-4 space-y-4">
+                        <button onclick="compartilharWhatsApp()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-black py-4 rounded-2xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-100 active:scale-[0.98]">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+                            Compartilhar no WhatsApp
+                        </button>
+                        
+                        <div class="grid grid-cols-2 gap-4">
+                            <button type="button" onclick="voltarParaCalculadora()" class="bg-blue-gradient hover:opacity-90 text-white font-bold py-4 rounded-2xl shadow-lg shadow-[var(--blue-intense)]/20 transition-all active:scale-95 flex items-center justify-center gap-2 text-[10px] uppercase tracking-widest">
+                                Voltar
+                            </button>
+                            <button type="button" onclick="resetarCalculadora()" class="bg-blue-gradient hover:opacity-90 text-white font-bold py-4 rounded-2xl shadow-lg shadow-[var(--blue-intense)]/20 transition-all active:scale-95 flex items-center justify-center gap-2 text-[10px] uppercase tracking-widest">
+                                Novo Cálculo
+                            </button>
+                        </div>
+                    </div>
+
+                    <p class="text-[9px] text-slate-500 leading-relaxed text-center pt-4">
+                        Este relatório é uma simulação baseada na <b>Lei Complementar Estadual 692/2021</b>. Os dados apresentados não substituem a análise oficial do setor de pessoal da corporação.
+                    </p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="pt-2 pb-4 text-center">
+    </footer>
+
+    <!-- MD3 Date Picker Modal -->
+    <div id="md-datepicker-scrim" class="md-scrim" onclick="closeDatePicker(event)">
+        <div class="md-modal" onclick="event.stopPropagation()">
+            <div class="md-header">
+                <div class="md-select-container">
+                    <select id="md-select-month" onchange="handleSelectChange()" class="md-select">
+                        <!-- Months injected by JS -->
+                    </select>
+                    <select id="md-select-year" onchange="handleSelectChange()" class="md-select">
+                        <!-- Years injected by JS -->
+                    </select>
+                </div>
+            </div>
+            <div class="md-calendar">
+                <div class="md-weekdays">
+                    <div class="md-weekday">D</div>
+                    <div class="md-weekday">S</div>
+                    <div class="md-weekday">T</div>
+                    <div class="md-weekday">Q</div>
+                    <div class="md-weekday">Q</div>
+                    <div class="md-weekday">S</div>
+                    <div class="md-weekday">S</div>
+                </div>
+                <div id="md-days-grid" class="md-days-grid">
+                    <!-- Days will be injected here -->
+                </div>
+            </div>
+            <div class="md-footer">
+                <button onclick="closeDatePicker()" class="md-btn md-btn-confirm">Cancelar</button>
+                <button onclick="confirmDate()" class="md-btn md-btn-confirm">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- MATERIAL DESIGN 3 DATE PICKER LOGIC ---
+        let currentPickerTarget = null;
+        let pickerDate = new Date();
+        let selectedDate = null;
+
+        const mesesNomes = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+
+        function openDatePicker(targetId) {
+            currentPickerTarget = targetId;
+            const currentVal = document.getElementById(targetId).value;
+            
+            if (currentVal) {
+                const [d, m, y] = currentVal.split('/').map(Number);
+                selectedDate = new Date(y, m - 1, d);
+                pickerDate = new Date(y, m - 1, 1);
+            } else {
+                selectedDate = null;
+                pickerDate = new Date();
+                pickerDate.setDate(1);
+            }
+            
+            renderCalendar();
+            document.getElementById('md-datepicker-scrim').classList.add('active');
+        }
+
+        function closeDatePicker(event) {
+            if (!event || event.target.id === 'md-datepicker-scrim') {
+                document.getElementById('md-datepicker-scrim').classList.remove('active');
+            }
+        }
+
+        function renderCalendar() {
+            const grid = document.getElementById('md-days-grid');
+            const monthSelect = document.getElementById('md-select-month');
+            const yearSelect = document.getElementById('md-select-year');
+            
+            // Populate selects if empty
+            if (monthSelect.options.length === 0) {
+                mesesNomes.forEach((m, i) => {
+                    const opt = new Option(m, i);
+                    monthSelect.add(opt);
+                });
+            }
+            if (yearSelect.options.length === 0) {
+                const currentYear = new Date().getFullYear();
+                for (let y = 1960; y <= currentYear + 20; y++) {
+                    const opt = new Option(y, y);
+                    yearSelect.add(opt);
+                }
+            }
+
+            grid.innerHTML = '';
+            monthSelect.value = pickerDate.getMonth();
+            yearSelect.value = pickerDate.getFullYear();
+
+            const year = pickerDate.getFullYear();
+            const month = pickerDate.getMonth();
+            
+            const firstDayOfMonth = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const daysInPrevMonth = new Date(year, month, 0).getDate();
+            const today = new Date();
+
+            // Days from previous month
+            for (let i = firstDayOfMonth - 1; i >= 0; i--) {
+                const dayNum = daysInPrevMonth - i;
+                const div = document.createElement('div');
+                div.className = 'md-day outside';
+                div.innerText = dayNum;
+                const d = new Date(year, month - 1, dayNum);
+                div.onclick = () => { selectedDate = d; pickerDate = new Date(year, month - 1, 1); renderCalendar(); };
+                grid.appendChild(div);
+            }
+
+            // Days of current month
+            for (let day = 1; day <= daysInMonth; day++) {
+                const div = document.createElement('div');
+                div.className = 'md-day';
+                div.innerText = day;
+                
+                const d = new Date(year, month, day);
+                
+                if (selectedDate && d.toDateString() === selectedDate.toDateString()) {
+                    div.classList.add('selected');
+                }
+                
+                if (d.toDateString() === today.toDateString()) {
+                    div.classList.add('today');
+                }
+
+                div.onclick = () => {
+                    selectedDate = d;
+                    renderCalendar();
+                };
+                
+                grid.appendChild(div);
+            }
+
+            // Days from next month to complete 6 rows (42 days)
+            const totalDaysShown = firstDayOfMonth + daysInMonth;
+            const remainingSlots = 42 - totalDaysShown;
+            for (let i = 1; i <= remainingSlots; i++) {
+                const div = document.createElement('div');
+                div.className = 'md-day outside';
+                div.innerText = i;
+                const d = new Date(year, month + 1, i);
+                div.onclick = () => { selectedDate = d; pickerDate = new Date(year, month + 1, 1); renderCalendar(); };
+                grid.appendChild(div);
+            }
+        }
+
+        function changeMonth(delta) {
+            pickerDate.setMonth(pickerDate.getMonth() + delta);
+            renderCalendar();
+        }
+
+        function handleSelectChange() {
+            const m = parseInt(document.getElementById('md-select-month').value);
+            const y = parseInt(document.getElementById('md-select-year').value);
+            pickerDate.setFullYear(y);
+            pickerDate.setMonth(m);
+            renderCalendar();
+        }
+
+        function confirmDate() {
+            if (selectedDate) {
+                const d = selectedDate.getDate().toString().padStart(2, '0');
+                const m = (selectedDate.getMonth() + 1).toString().padStart(2, '0');
+                const y = selectedDate.getFullYear();
+                const formatted = `${d}/${m}/${y}`;
+                
+                const input = document.getElementById(currentPickerTarget);
+                input.value = formatted;
+                
+                // Trigger calculation if it's an averbation field
+                if (currentPickerTarget.startsWith('averb-')) {
+                    calcularPeriodoAverbacao();
+                }
+                
+                closeDatePicker();
+            }
+        }
+
+        // --- AUXILIARES UI ---
+        function toggleSection(id, btn) {
+            const content = document.getElementById(id);
+            const icon = btn.querySelector('svg');
+            content.classList.toggle('active');
+            icon.classList.toggle('rotate-180');
+        }
+
+        function limitDigits(el, max) {
+            if (el.value.length > max) {
+                el.value = el.value.slice(0, max);
+            }
+        }
+
+        let averbacaoMode = 'datas';
+        let licencaCount = 0;
+
+        function updateLicenca(delta) {
+            const newCount = licencaCount + delta;
+            if (newCount >= 0 && newCount <= 2) {
+                licencaCount = newCount;
+                document.getElementById('licenca-count').value = licencaCount;
+                document.getElementById('licenca-count-display').innerText = `${licencaCount} ${licencaCount === 1 ? 'Licença' : 'Licenças'}`;
+                
+                document.getElementById('btn-licenca-minus').disabled = (licencaCount === 0);
+                document.getElementById('btn-licenca-plus').disabled = (licencaCount === 2);
+
+                // Atualizar card informativo dinâmico
+                const impactoTexto = document.getElementById('licenca-impacto-texto');
+                const infoCard = document.getElementById('licenca-info-card');
+                
+                // Pequena animação ao mudar
+                infoCard.classList.remove('fade-in');
+                void infoCard.offsetWidth; // trigger reflow
+                infoCard.classList.add('fade-in');
+
+                if (licencaCount === 0) {
+                    impactoTexto.innerHTML = "Nenhuma licença especial considerada no cálculo.";
+                } else if (licencaCount === 1) {
+                    impactoTexto.innerHTML = "1 licença especial será convertida em tempo de serviço.<br><span class='text-blue-600 font-bold'>Redução estimada: 1 ano no tempo necessário para aposentadoria.</span>";
+                } else if (licencaCount === 2) {
+                    impactoTexto.innerHTML = "2 licenças especiais serão convertidas em tempo de serviço.<br><span class='text-blue-600 font-bold'>Redução estimada: 2 anos no tempo necessário para aposentadoria.</span>";
+                }
+            }
+        }
+
+        function setAverbacaoMode(mode) {
+            averbacaoMode = mode;
+            const btnDatas = document.getElementById('btn-mode-datas');
+            const btnPeriodo = document.getElementById('btn-mode-periodo');
+            const contentDatas = document.getElementById('averb-mode-datas-content');
+            const contentPeriodo = document.getElementById('averb-mode-periodo-content');
+
+            if (mode === 'datas') {
+                btnDatas.classList.add('bg-white', 'shadow-sm', 'text-blue-600');
+                btnDatas.classList.remove('text-slate-500');
+                btnPeriodo.classList.remove('bg-white', 'shadow-sm', 'text-blue-600');
+                btnPeriodo.classList.add('text-slate-500');
+                
+                contentDatas.classList.remove('hidden');
+                contentPeriodo.classList.add('hidden');
+                
+                // Reset period values
+                document.getElementById('averb-anos').value = 0;
+                document.getElementById('averb-meses').value = 0;
+                document.getElementById('averb-dias').value = 0;
+            } else {
+                btnPeriodo.classList.add('bg-white', 'shadow-sm', 'text-blue-600');
+                btnPeriodo.classList.remove('text-slate-500');
+                btnDatas.classList.remove('bg-white', 'shadow-sm', 'text-blue-600');
+                btnDatas.classList.add('text-slate-500');
+                
+                contentPeriodo.classList.remove('hidden');
+                contentDatas.classList.add('hidden');
+                
+                // Reset date values
+                document.getElementById('averb-data-inicio').value = '';
+                document.getElementById('averb-data-fim').value = '';
+                // Also reset period values because they were calculated from dates
+                document.getElementById('averb-anos').value = 0;
+                document.getElementById('averb-meses').value = 0;
+                document.getElementById('averb-dias').value = 0;
+            }
+        }
+
+        function calcularPeriodoAverbacao() {
+            const inicioStr = document.getElementById('averb-data-inicio').value;
+            const fimStr = document.getElementById('averb-data-fim').value;
+            
+            if (inicioStr && fimStr) {
+                const [di, mi, yi] = inicioStr.split('/').map(Number);
+                const [df, mf, yf] = fimStr.split('/').map(Number);
+                
+                const inicio = new Date(yi, mi - 1, di);
+                const fim = new Date(yf, mf - 1, df);
+                
+                if (fim > inicio) {
+                    const diffMs = fim - inicio;
+                    const totalDias = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+                    
+                    const anos = Math.floor(totalDias / 365);
+                    const restoAnos = totalDias % 365;
+                    const meses = Math.floor(restoAnos / 30);
+                    const dias = restoAnos % 30;
+                    
+                    document.getElementById('averb-anos').value = anos;
+                    document.getElementById('averb-meses').value = meses;
+                    document.getElementById('averb-dias').value = dias;
+                }
+            }
+        }
+
+        // --- CONSTANTES ---
+        const DATA_REFERENCIA_LEI = new Date(2021, 11, 13); // 13/12/2021
+        const MS_PER_DAY = 1000 * 60 * 60 * 24;
+        const DIAS_POR_ANO_LEI = 365; // A tabela oficial utiliza 365 dias fixos para definição de períodos
+        const TEMPO_MINIMO_PADRAO_ANOS = 30; 
+
+        // --- ELEMENTOS ---
+        const form = document.getElementById('calc-form');
+        const resultSection = document.getElementById('result-section');
+        const formSection = document.getElementById('form-section');
+        const welcomeSection = document.getElementById('welcome-section');
+        const btnReset = document.getElementById('btn-reset');
+
+        // --- FUNÇÕES DE CÁLCULO ---
+
+        function calcularTMO(dataIngresso) {
+            const ano = dataIngresso.getFullYear();
+            if (ano <= 1995) return 25;
+            if (ano === 1996) return 25.5;
+            if (ano === 1997) return 26;
+            if (ano === 1998) return 26.5;
+            if (ano === 1999) return 27;
+            if (ano === 2000) return 27.5;
+            if (ano === 2001) return 28;
+            if (ano === 2002) return 28.5;
+            if (ano === 2003) return 29;
+            if (ano === 2004) return 29.5;
+            return 30;
+        }
+
+        function diffDias(d1, d2) {
+            return Math.floor((d2.getTime() - d1.getTime()) / MS_PER_DAY);
+        }
+
+        function adicionarDias(data, dias) {
+            const novaData = new Date(data.getTime());
+            novaData.setDate(novaData.getDate() + Math.ceil(dias));
+            return novaData;
+        }
+
+        /**
+         * Converte dias para o formato Y M D seguindo o padrão da tabela (365/30)
+         */
+        function converterDiasParaPeriodo(totalDias) {
+            if (totalDias <= 0) return "00 dias";
+            
+            let anos = Math.floor(totalDias / 365);
+            let restoAnos = totalDias % 365;
+            let meses = Math.floor(restoAnos / 30);
+            let dias = restoAnos % 30;
+
+            let partes = [];
+            partes.push(`${anos.toString().padStart(2, '0')} ${anos === 1 ? 'ano' : 'anos'}`);
+            partes.push(`${meses.toString().padStart(2, '0')} ${meses === 1 ? 'mês' : 'meses'}`);
+            partes.push(`${dias.toString().padStart(2, '0')} ${dias === 1 ? 'dias' : 'dias'}`);
+            return partes.join(', ');
+        }
+
+        function calcularDiasAverbacao(y, m, d) {
+            return (y * 365) + (m * 30) + d;
+        }
+
+        function processarCalculo(e) {
+            e.preventDefault();
+
+            const dataIngressoStr = document.getElementById('data-ingresso').value;
+            if (!dataIngressoStr) {
+                alert("Por favor, selecione a data de ingresso completa.");
+                return;
+            }
+            const [d, m, y] = dataIngressoStr.split('/').map(Number);
+            const dataIngresso = new Date(y, m - 1, d);
+            
+            const numLicencas = parseInt(document.getElementById('licenca-count').value);
+            const averbAnos = parseInt(document.getElementById('averb-anos').value) || 0;
+            const averbMeses = parseInt(document.getElementById('averb-meses').value) || 0;
+            const averbDias = parseInt(document.getElementById('averb-dias').value) || 0;
+
+            // 1. TMO e Data TMO (Base 365 dias)
+            const tmoAnos = calcularTMO(dataIngresso);
+            const diasAverbados = calcularDiasAverbacao(averbAnos, averbMeses, averbDias);
+            
+            // Data TMO = Ingresso + (TMO * 365) - Averbação
+            const totalDiasTMO = tmoAnos * 365;
+            const dataTmoAtingido = adicionarDias(dataIngresso, totalDiasTMO - diasAverbados);
+
+            // 2. Tempo Mínimo de Serviço (30 anos * 365)
+            const totalDiasMinimo = TEMPO_MINIMO_PADRAO_ANOS * 365;
+            const dataTempoMinimoSemPedagio = adicionarDias(dataIngresso, totalDiasMinimo - diasAverbados);
+
+            // 3. Pedágio (17% sobre o que faltava em 13/12/2021 para os 30 anos)
+            const faltavaNaRefDias = diffDias(DATA_REFERENCIA_LEI, dataTempoMinimoSemPedagio);
+            const pedagioDias = Math.max(0, Math.ceil(faltavaNaRefDias * 0.17));
+
+            // 4. Redução por Licença Especial (1 ano = 365 dias)
+            const reducaoLicencaDias = numLicencas * 365;
+
+            // 5. Data Mínima para Requerimento
+            // Data Final = Data Tempo Mínimo + Pedágio - Licenças
+            let dataMinimaRequerimento = adicionarDias(dataTempoMinimoSemPedagio, pedagioDias);
+            dataMinimaRequerimento = adicionarDias(dataMinimaRequerimento, -reducaoLicencaDias);
+
+            // 6. Relatório
+            const hoje = new Date();
+            const tempoCumpridoHoje = diffDias(dataIngresso, hoje) + diasAverbados;
+            const tempoRestanteHoje = diffDias(hoje, dataMinimaRequerimento);
+
+            // Dias Faltantes (Base sem pedágio)
+            const dataBaseSemPedagio = adicionarDias(dataTempoMinimoSemPedagio, -reducaoLicencaDias);
+            const diasFaltantesBase = Math.max(0, diffDias(hoje, dataBaseSemPedagio));
+
+            // Cálculo da Porcentagem de Progresso
+            const totalDiasNecessarios = diffDias(dataIngresso, dataMinimaRequerimento);
+            const porcentagem = Math.min(100, Math.max(0, (tempoCumpridoHoje / totalDiasNecessarios) * 100));
+
+            // UI Updates
+            const dataGeracao = hoje.toLocaleDateString('pt-BR');
+            document.getElementById('gerado-em').innerText = `Gerado em: ${dataGeracao}`;
+            document.getElementById('data-aposentadoria-final').innerText = dataMinimaRequerimento.toLocaleDateString('pt-BR');
+            document.getElementById('res-data-ingresso').innerText = dataIngresso.toLocaleDateString('pt-BR');
+            document.getElementById('res-tmo').innerText = `${tmoAnos} anos (${dataTmoAtingido.toLocaleDateString('pt-BR')})`;
+            document.getElementById('res-cumprido').innerText = converterDiasParaPeriodo(tempoCumpridoHoje);
+            document.getElementById('res-averbado').innerText = converterDiasParaPeriodo(diasAverbados);
+            document.getElementById('res-licenca').innerText = numLicencas > 0 ? `-${numLicencas} ${numLicencas === 1 ? 'ano' : 'anos'}` : "Nenhum";
+            document.getElementById('res-faltava-ref').innerText = converterDiasParaPeriodo(faltavaNaRefDias);
+            document.getElementById('res-pedagio').innerText = converterDiasParaPeriodo(pedagioDias);
+            document.getElementById('res-restante').innerText = tempoRestanteHoje > 0 ? converterDiasParaPeriodo(tempoRestanteHoje) : "Tempo atingido!";
+            
+            // Novos Campos em Dias
+            document.getElementById('res-dias-trabalhados-val').innerText = `${tempoCumpridoHoje} dias`;
+            document.getElementById('res-dias-faltantes-val').innerText = `${diasFaltantesBase} dias`;
+            document.getElementById('res-dias-pedagio-val').innerText = `${pedagioDias} dias`;
+            document.getElementById('res-total-cumprir-val').innerText = `${Math.max(0, tempoRestanteHoje)} dias`;
+            document.getElementById('res-porcentagem').innerText = `${Math.floor(porcentagem)}%`;
+            
+            // Atualizar Barra de Progresso
+            const progressBar = document.getElementById('progress-bar');
+            progressBar.style.width = `${Math.floor(porcentagem)}%`;
+
+
+            // Atualizar Legendas do Gráfico
+            const percCumprido = Math.floor(porcentagem);
+            const percRestante = 100 - percCumprido;
+            
+            document.getElementById('legend-cumprido-val').innerText = `${tempoCumpridoHoje} dias`;
+            document.getElementById('legend-restante-val').innerText = `${Math.max(0, tempoRestanteHoje)} dias`;
+            document.getElementById('perc-cumprido-val').innerText = `${percCumprido}% realizado`;
+            document.getElementById('perc-restante-val').innerText = `${percRestante}% restante`;
+
+            formSection.classList.add('hidden');
+            welcomeSection.classList.add('hidden');
+            resultSection.classList.remove('hidden');
+            window.scrollTo(0, 0);
+        }
+
+        function compartilharWhatsApp() {
+            const dataFinal = document.getElementById('data-aposentadoria-final').innerText;
+            const tempoCumprido = document.getElementById('res-cumprido').innerText;
+            const tempoRestante = document.getElementById('res-restante').innerText;
+            const pedagio = document.getElementById('res-pedagio').innerText;
+            
+            const mensagem = encodeURIComponent(
+                `📊 *RELATÓRIO DE APOSENTADORIA MILITAR*\n\n` +
+                `📅 *Data Prevista:* ${dataFinal}\n` +
+                `⏳ *Tempo Cumprido:* ${tempoCumprido}\n` +
+                `📉 *Pedágio (17%):* ${pedagio}\n` +
+                `🏁 *Tempo Restante:* ${tempoRestante}\n\n` +
+                `_Simulação baseada na LC 692/2021_`
+            );
+            
+            window.open(`https://wa.me/?text=${mensagem}`, '_blank');
+        }
+
+        function voltarParaCalculadora() {
+            resultSection.classList.add('hidden');
+            formSection.classList.remove('hidden');
+            welcomeSection.classList.remove('hidden');
+            window.scrollTo(0, 0);
+        }
+
+        function resetarCalculadora() {
+            resultSection.classList.add('hidden');
+            formSection.classList.remove('hidden');
+            welcomeSection.classList.remove('hidden');
+            form.reset();
+            setAverbacaoMode('datas');
+            licencaCount = 0;
+            updateLicenca(0);
+            window.scrollTo(0, 0);
+        }
+
+        form.addEventListener('submit', processarCalculo);
+        
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/service-worker.js').catch(() => {});
+                
+                // Fallback de scroll
+                document.body.style.overflowY = 'auto';
+                document.documentElement.style.overflowY = 'auto';
+            });
+        }
+    </script>
+</body>
+</html>
